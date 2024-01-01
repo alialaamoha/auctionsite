@@ -19,7 +19,12 @@ public class AuctionController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions(){
+    public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions(string date){
+
+        var query = _context.Auctions.OrderBy( x=> x.Item.Make).AsQueryable();
+        if(!string.IsNullOrEmpty(date)){
+            query = query.Where(x =>x.UpdatedAt.CompareTo(DateTime.Parse(date).ToUniversalTime()) > 0);
+        }
 
         var auctions = await _context.Auctions.Include( x=> x.Item).OrderBy(x => x.Item.Make).ToListAsync();
 
@@ -32,6 +37,7 @@ public class AuctionController : ControllerBase
     public async Task<ActionResult<AuctionDto>> GetAuctionByuId(Guid id){
         var auction = await _context.Auctions.Include(x => x.Item).FirstOrDefaultAsync( x => x.Id == id);
 
+        
         if(auction == null) return NotFound();
         return _mapper.Map<AuctionDto>(auction);
     }
